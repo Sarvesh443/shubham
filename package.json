@@ -1,0 +1,9 @@
+{
+    "name": "pig-game-socket",
+    "version": "2.0.0",
+    "description": "This is a multiplayer game",
+    "dependencies": {
+        "express": "^4.18.2",
+        "socket.io": "^4.5.4"
+    }
+}

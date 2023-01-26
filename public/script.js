@@ -12,10 +12,12 @@ const btnRoll = document.querySelector('.btn--roll');
 const btnHold = document.querySelector('.btn--hold');
 const btnNewGame = document.querySelector('.btn--new');
 
-    let scores = [0, 0];
-    let currentScore = 0;
-    let activePlayer = 0;
-    let playing = true;
+let scores = [0, 0];
+let currentScore = 0;
+let activePlayer = 0;
+let playing = true;
+
+let socket
 
 const init = function() {
     score0El.textContent = 0;
@@ -35,11 +37,15 @@ const init = function() {
     player1El.classList.remove('player--winner');
     player0El.classList.add('player--active');
     player1El.classList.remove('player--active');
+
+    socket = io();
+    socket.on("connect", ()=>{
+        console.log("Socket ID: ", socket.id)
+    })
+
 }
 
 init();
-
-
 
 const switchPlayer = function() {
     document.getElementById(`current--${activePlayer}`).textContent = 0;
@@ -60,6 +66,10 @@ btnRoll.addEventListener('click', function(){
         } else {
             switchPlayer();
         }
+        socket.emit("decide", {
+            "player_id": socket.id,
+            "decision": "roll"
+         });
     }
 });
 
@@ -74,8 +84,44 @@ btnHold.addEventListener('click', function(){
             document.querySelector(`.player--${activePlayer}`).classList.remove('player--active');
         }
         switchPlayer();
+     socket.emit("decide", {
+        "player_id": socket.id,
+        "decision": "hold"
+     });
     }
 });
 
 btnNewGame.addEventListener('click', init)
 
+const EnablePlayer = function(player) {
+    const isYourTurn = player===socket.id;
+    if (isYourTurn) {
+        btnHold.disabled = false;
+        btnRoll.disabled = false;
+    } else {
+        btnHold.disabled = true;
+        btnRoll.disabled = true;   
+    }
+}
+
+socket.on("connection_status", (args) => {
+    console.log("Received a connection_status signal", args.connection_status)
+    if (args.connection_status === 'waiting') {
+        alert("Waiting for second player to begin the game")
+    }
+    else if (args.connection_status === 'ready') {
+        EnablePlayer(args.active_player);
+        alert(`Let's begin the game. ${args.active_player===socket.id ? "It's your turn" : "Oponent's turn"}`)
+    }
+    else if (args.connection_status === 'reject') {
+        alert("Can't join, already 2 players onboarded")
+    }
+});
+
+socket.on("score_update", (args) =>{
+    console.log("score update", args);
+    scores[0] = args.player1_total;
+    scores[1] = args.player2_total;
+    document.getElementById(`current--0`).textContent = args.player1_current;
+    document.getElementById(`current--1`).textContent = args.player2_current;
+});
