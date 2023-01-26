@@ -105,3 +105,9 @@ socket.on("score_update", (args) =>{
     if (args.dice === 0) diceEl.classList.add('hidden');
     EnablePlayer(args.next_turn, args.acitive_player_roll_num)
 });
+
+socket.on("winner", (winner) => {
+    playing = false;
+    document.querySelector(`.player--${winner}`).classList.add('player--winner');
+    document.querySelector(`.player--${winner}`).classList.remove('player--active');
+});

@@ -77,8 +77,13 @@ io.on('connection', (socket) => {
       else if (args.decision === 'hold') {
         players[args.player_id].total_score += players[args.player_id].current_score;
         players[args.player_id].current_score = 0; 
-        activePlayer = (activePlayer + 1) % 2;
-        NotifyScores(activePlayer, 0);
+        if (players[args.player_id].total_score >= 60) {
+          io.emit("winner", activePlayer);
+        }
+        else {
+            activePlayer = (activePlayer + 1) % 2;
+            NotifyScores(activePlayer, 0);
+        }
       }
     }
   });
