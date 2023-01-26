@@ -47,25 +47,8 @@ const init = function() {
 
 init();
 
-const switchPlayer = function() {
-    document.getElementById(`current--${activePlayer}`).textContent = 0;
-    activePlayer = activePlayer === 0 ? 1 : 0;
-    currentScore = 0;
-    player0El.classList.toggle('player--active');
-    player1El.classList.toggle('player--active');
-}
-
 btnRoll.addEventListener('click', function(){
     if(playing){
-        const dice = Math.trunc(Math.random()*6) + 1;
-        diceEl.classList.remove('hidden');
-        diceEl.src = `assets/images/dice-${dice}.png`;
-        if(dice!==1){
-            currentScore += dice;
-            document.getElementById(`current--${activePlayer}`).textContent = currentScore;
-        } else {
-            switchPlayer();
-        }
         socket.emit("decide", {
             "player_id": socket.id,
             "decision": "roll"
@@ -75,15 +58,6 @@ btnRoll.addEventListener('click', function(){
 
 btnHold.addEventListener('click', function(){
     if(playing){
-        scores[activePlayer] += currentScore;
-        document.getElementById(`score--${activePlayer}`).textContent = scores[activePlayer];
-    
-        if(scores[activePlayer] >= 60) {
-            playing = false;
-            document.querySelector(`.player--${activePlayer}`).classList.add('player--winner');
-            document.querySelector(`.player--${activePlayer}`).classList.remove('player--active');
-        }
-        switchPlayer();
      socket.emit("decide", {
         "player_id": socket.id,
         "decision": "hold"
@@ -93,7 +67,7 @@ btnHold.addEventListener('click', function(){
 
 btnNewGame.addEventListener('click', init)
 
-const EnablePlayer = function(player) {
+const EnablePlayer = function(player, roll) {
     const isYourTurn = player===socket.id;
     if (isYourTurn) {
         btnHold.disabled = false;
@@ -102,6 +76,8 @@ const EnablePlayer = function(player) {
         btnHold.disabled = true;
         btnRoll.disabled = true;   
     }
+    document.querySelector(`.player--${roll}`).classList.toggle('player--active', true);
+    document.querySelector(`.player--${(roll+1)%2}`).classList.toggle('player--active', false);
 }
 
 socket.on("connection_status", (args) => {
@@ -110,7 +86,7 @@ socket.on("connection_status", (args) => {
         alert("Waiting for second player to begin the game")
     }
     else if (args.connection_status === 'ready') {
-        EnablePlayer(args.active_player);
+        EnablePlayer(args.active_player, 0);
         alert(`Let's begin the game. ${args.active_player===socket.id ? "It's your turn" : "Oponent's turn"}`)
     }
     else if (args.connection_status === 'reject') {
@@ -120,8 +96,12 @@ socket.on("connection_status", (args) => {
 
 socket.on("score_update", (args) =>{
     console.log("score update", args);
-    scores[0] = args.player1_total;
-    scores[1] = args.player2_total;
     document.getElementById(`current--0`).textContent = args.player1_current;
     document.getElementById(`current--1`).textContent = args.player2_current;
+    document.getElementById(`score--0`).textContent = args.player1_total;
+    document.getElementById(`score--1`).textContent = args.player2_total;
+    diceEl.classList.remove('hidden');
+    diceEl.src = `assets/images/dice-${args.dice}.png`;
+    if (args.dice === 0) diceEl.classList.add('hidden');
+    EnablePlayer(args.next_turn, args.acitive_player_roll_num)
 });

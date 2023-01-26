@@ -41,29 +41,44 @@ io.on('connection', (socket) => {
     io.emit("connection_status",  {"connection_status": "waiting"})
   }
 
-  function NotifyScores(active_player) {
+  function NotifyScores(active_player, dice) {
+    // Get the player's socket ids
     let player1 = Object.keys(players)[0];
     let player2 = Object.keys(players)[1];
 
+    // Send these to the clients
     io.emit("score_update", {
       'player1_current': players[player1].current_score,
       'player1_total': players[player1].total_score,
       'player2_current': players[player2].current_score,
       'player2_total': players[player2].total_score,
-      'active_player': Object.keys(players)[activePlayer],
+      'next_turn': Object.keys(players)[active_player],
+      'acitive_player_roll_num': active_player,
+      'dice': dice
     });
   }
 
+  // This triggers when the client sends its decision on roll or hold
   socket.on("decide", (args) => {
     console.log("decide", args);
+    
+    // Just a check if the message received by server is from the active client.  
     if (args.player_id === Object.keys(players)[activePlayer]) {
       if (args.decision === 'roll'){
-      roll_die = 5; // Roll the die
-      players[args.player_id].current_score += roll_die; 
-      NotifyScores(activePlayer);
+
+        // This is how the score is calculated
+        const dice = Math.trunc(Math.random()*6) + 1;
+        players[args.player_id].current_score = dice == 1 
+          ? 0 
+          : players[args.player_id].current_score + dice;
+        activePlayer = dice == 1 ? (activePlayer + 1) % 2 : activePlayer
+        NotifyScores(activePlayer, dice);
       }
-      else {
-        NotifyScores((activePlayer+1)%2);
+      else if (args.decision === 'hold') {
+        players[args.player_id].total_score += players[args.player_id].current_score;
+        players[args.player_id].current_score = 0; 
+        activePlayer = (activePlayer + 1) % 2;
+        NotifyScores(activePlayer, 0);
       }
     }
   });
