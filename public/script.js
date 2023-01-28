@@ -12,21 +12,19 @@ const btnRoll = document.querySelector('.btn--roll');
 const btnHold = document.querySelector('.btn--hold');
 const btnNewGame = document.querySelector('.btn--new');
 
-let scores = [0, 0];
-let currentScore = 0;
-let activePlayer = 0;
+// Variable declaration
 let playing = true;
-
 let socket
+socket = io();
+socket.on("connect", ()=>{
+    console.log("Socket ID: ", socket.id)
+})
 
 const init = function() {
     score0El.textContent = 0;
     score1El.textContent = 0;
     diceEl.classList.add('hidden');
     
-    scores = [0, 0];
-    currentScore = 0;
-    activePlayer = 0;
     playing = true;
 
     score0El.textContent = 0;
@@ -37,12 +35,6 @@ const init = function() {
     player1El.classList.remove('player--winner');
     player0El.classList.add('player--active');
     player1El.classList.remove('player--active');
-
-    socket = io();
-    socket.on("connect", ()=>{
-        console.log("Socket ID: ", socket.id)
-    })
-
 }
 
 init();
@@ -65,7 +57,11 @@ btnHold.addEventListener('click', function(){
     }
 });
 
-btnNewGame.addEventListener('click', init)
+btnNewGame.addEventListener('click', ()=>{
+    console.log("Start new game");
+    init();
+    socket.emit('restart');
+})
 
 const EnablePlayer = function(player, roll) {
     const isYourTurn = (player===socket.id);
@@ -117,4 +113,8 @@ socket.on("winner", (winner) => {
     playing = false;
     document.querySelector(`.player--${winner}`).classList.add('player--winner');
     document.querySelector(`.player--${winner}`).classList.remove('player--active');
+});
+
+socket.on('restart', ()=>{
+    init();
 });

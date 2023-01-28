@@ -88,6 +88,18 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('restart', ()=>{
+    let player1 = Object.keys(players)[0];
+    let player2 = Object.keys(players)[1];
+    players[player1].total_score = 0;
+    players[player1].current_score = 0;
+    players[player2].total_score = 0;
+    players[player2].current_score = 0;
+    activePlayer = 0;
+    NotifyScores(0, 0, players)
+    io.emit('restart');
+  })
+
   socket.on('disconnect', () => {
       delete players[socket.id];
       console.log('Client disconnected ' + socket.id);
