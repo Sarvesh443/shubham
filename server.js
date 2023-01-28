@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
     io.emit("connection_status",  {"connection_status": "waiting"})
   }
 
-  function NotifyScores(active_player, dice) {
+  function NotifyScores(active_player, dice, players) {
     // Get the player's socket ids
     let player1 = Object.keys(players)[0];
     let player2 = Object.keys(players)[1];
@@ -72,7 +72,7 @@ io.on('connection', (socket) => {
           ? 0 
           : players[args.player_id].current_score + dice;
         activePlayer = dice == 1 ? (activePlayer + 1) % 2 : activePlayer
-        NotifyScores(activePlayer, dice);
+        NotifyScores(activePlayer, dice, players);
       }
       else if (args.decision === 'hold') {
         players[args.player_id].total_score += players[args.player_id].current_score;
@@ -82,7 +82,7 @@ io.on('connection', (socket) => {
           winner = activePlayer;
         }
         activePlayer = (activePlayer + 1) % 2;
-        NotifyScores(activePlayer, 0);
+        NotifyScores(activePlayer, 0, players);
         if (winner >= 0)  io.emit("winner", winner);
       }
     }

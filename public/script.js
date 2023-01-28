@@ -68,14 +68,21 @@ btnHold.addEventListener('click', function(){
 btnNewGame.addEventListener('click', init)
 
 const EnablePlayer = function(player, roll) {
-    const isYourTurn = player===socket.id;
+    const isYourTurn = (player===socket.id);
+    console.log("isYourTurn", isYourTurn);
     if (isYourTurn) {
+        console.log(btnHold.disabled, btnRoll.style.display)
         btnHold.disabled = false;
         btnRoll.disabled = false;
+        btnRoll.style = "display: visible;"
+        btnHold.style = "display: visible;"
     } else {
         btnHold.disabled = true;
-        btnRoll.disabled = true;   
+        btnRoll.disabled = true; 
+        btnRoll.style.display = "none"
+        btnHold.style.display = "none"  
     }
+
     document.querySelector(`.player--${roll}`).classList.toggle('player--active', true);
     document.querySelector(`.player--${(roll+1)%2}`).classList.toggle('player--active', false);
 }
