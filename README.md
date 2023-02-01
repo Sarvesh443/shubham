@@ -5,9 +5,10 @@ You can play the game with your friend by launching a server.
 
 ## Installation Steps
 
-```bash
+```bash 
+
 # To install the dependencies 
-> npm install
+> npm install 
 
 # Run the app 
 > node server.js
