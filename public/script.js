@@ -20,6 +20,7 @@ socket.on("connect", ()=>{
     console.log("Socket ID: ", socket.id)
 })
 
+// Definations
 const init = function() {
     score0El.textContent = 0;
     score1El.textContent = 0;
@@ -37,8 +38,30 @@ const init = function() {
     player1El.classList.remove('player--active');
 }
 
+const EnablePlayer = function(player, roll) {
+    const isYourTurn = (player===socket.id);
+    console.log("isYourTurn", isYourTurn);
+    if (isYourTurn) {
+        console.log(btnHold.disabled, btnRoll.style.display)
+        btnHold.disabled = false;
+        btnRoll.disabled = false;
+        btnRoll.style = "display: visible;"
+        btnHold.style = "display: visible;"
+    } else {
+        btnHold.disabled = true;
+        btnRoll.disabled = true; 
+        btnRoll.style.display = "none"
+        btnHold.style.display = "none"  
+    }
+
+    document.querySelector(`.player--${roll}`).classList.toggle('player--active', true);
+    document.querySelector(`.player--${(roll+1)%2}`).classList.toggle('player--active', false);
+}
+
+// Logic begins here
 init();
 
+// Button Listeners
 btnRoll.addEventListener('click', function(){
     if(playing){
         socket.emit("decide", {
@@ -63,26 +86,8 @@ btnNewGame.addEventListener('click', ()=>{
     socket.emit('restart');
 })
 
-const EnablePlayer = function(player, roll) {
-    const isYourTurn = (player===socket.id);
-    console.log("isYourTurn", isYourTurn);
-    if (isYourTurn) {
-        console.log(btnHold.disabled, btnRoll.style.display)
-        btnHold.disabled = false;
-        btnRoll.disabled = false;
-        btnRoll.style = "display: visible;"
-        btnHold.style = "display: visible;"
-    } else {
-        btnHold.disabled = true;
-        btnRoll.disabled = true; 
-        btnRoll.style.display = "none"
-        btnHold.style.display = "none"  
-    }
-
-    document.querySelector(`.player--${roll}`).classList.toggle('player--active', true);
-    document.querySelector(`.player--${(roll+1)%2}`).classList.toggle('player--active', false);
-}
-
+// WebSocket Receivers
+// Main Game
 socket.on("connection_status", (args) => {
     console.log("Received a connection_status signal", args.connection_status)
     if (args.connection_status === 'waiting') {
@@ -118,3 +123,5 @@ socket.on("winner", (winner) => {
 socket.on('restart', ()=>{
     init();
 });
+
+// Chat

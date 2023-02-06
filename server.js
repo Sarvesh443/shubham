@@ -6,7 +6,6 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 
 app.use(express.static("public"));
-
 let players = {};
 let activePlayer = 0;
 
