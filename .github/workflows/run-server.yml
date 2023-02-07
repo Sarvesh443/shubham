@@ -1,0 +1,38 @@
+name: Run a test server
+
+on:
+  workflow_dispatch:
+    inputs: 
+      duration:
+        type: string
+        description: This is the duration (in seconds) for which you want to run the dev server 
+        default: "300"
+
+jobs:
+  run_server:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v3
+    - name: Start Server
+      run: |
+        npm ci 
+        npm run dev &
+    - name: Ngrok Tunnel Action
+      run: |
+        wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+        unzip -qq ngrok-stable-linux-amd64.zip
+        ./ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+        ./ngrok http 3000 &
+    - name: Get Tunnel Output
+      id: tunnel
+      shell: bash
+      run: |
+        url=$( curl http://127.0.0.1:4040/api/tunnels | jq -r ".tunnels[0].public_url" )
+        echo "tunnel-url: $url" 
+        echo "tunnel-url: $url" >> $GITHUB_STEP_SUMMARY
+    - name: Close Server
+      run: |
+        sleep ${{ inputs.duration }}
+        echo "tunnel closed"
